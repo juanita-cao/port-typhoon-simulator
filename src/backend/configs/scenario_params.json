@@ -1,0 +1,42 @@
+{
+  "_source": "RESS 2018 Table 8 — Disrupted and recovery period (days) and damage probability per scenario",
+  "_note": "scenario_id = (typhoon_cat - 1) * 5 + dist_bin; dist_bin 1=0-100km ... 5=401-500km",
+  "scenarios": [
+    {"scenario_id":  1, "typhoon_cat": 1, "dist_bin": 1, "dist_min_km":   0, "dist_max_km": 100, "disruption_days_min":  0, "disruption_days_max":  30, "damage_prob_min": 0.096, "damage_prob_max": 0.120},
+    {"scenario_id":  2, "typhoon_cat": 1, "dist_bin": 2, "dist_min_km": 101, "dist_max_km": 200, "disruption_days_min":  0, "disruption_days_max":  10, "damage_prob_min": 0.048, "damage_prob_max": 0.060},
+    {"scenario_id":  3, "typhoon_cat": 1, "dist_bin": 3, "dist_min_km": 201, "dist_max_km": 300, "disruption_days_min":  0, "disruption_days_max":   7, "damage_prob_min": 0.024, "damage_prob_max": 0.030},
+    {"scenario_id":  4, "typhoon_cat": 1, "dist_bin": 4, "dist_min_km": 301, "dist_max_km": 400, "disruption_days_min":  0, "disruption_days_max":   4, "damage_prob_min": 0.012, "damage_prob_max": 0.015},
+    {"scenario_id":  5, "typhoon_cat": 1, "dist_bin": 5, "dist_min_km": 401, "dist_max_km": 500, "disruption_days_min":  0, "disruption_days_max":   1, "damage_prob_min": 0.006, "damage_prob_max": 0.008},
+
+    {"scenario_id":  6, "typhoon_cat": 2, "dist_bin": 1, "dist_min_km":   0, "dist_max_km": 100, "disruption_days_min": 10, "disruption_days_max":  90, "damage_prob_min": 0.192, "damage_prob_max": 0.240},
+    {"scenario_id":  7, "typhoon_cat": 2, "dist_bin": 2, "dist_min_km": 101, "dist_max_km": 200, "disruption_days_min": 10, "disruption_days_max":  50, "damage_prob_min": 0.096, "damage_prob_max": 0.120},
+    {"scenario_id":  8, "typhoon_cat": 2, "dist_bin": 3, "dist_min_km": 201, "dist_max_km": 300, "disruption_days_min":  0, "disruption_days_max":  20, "damage_prob_min": 0.048, "damage_prob_max": 0.060},
+    {"scenario_id":  9, "typhoon_cat": 2, "dist_bin": 4, "dist_min_km": 301, "dist_max_km": 400, "disruption_days_min":  0, "disruption_days_max":  10, "damage_prob_min": 0.024, "damage_prob_max": 0.030},
+    {"scenario_id": 10, "typhoon_cat": 2, "dist_bin": 5, "dist_min_km": 401, "dist_max_km": 500, "disruption_days_min":  0, "disruption_days_max":   2, "damage_prob_min": 0.012, "damage_prob_max": 0.015},
+
+    {"scenario_id": 11, "typhoon_cat": 3, "dist_bin": 1, "dist_min_km":   0, "dist_max_km": 100, "disruption_days_min": 20, "disruption_days_max": 200, "damage_prob_min": 0.288, "damage_prob_max": 0.360},
+    {"scenario_id": 12, "typhoon_cat": 3, "dist_bin": 2, "dist_min_km": 101, "dist_max_km": 200, "disruption_days_min": 10, "disruption_days_max": 150, "damage_prob_min": 0.144, "damage_prob_max": 0.180},
+    {"scenario_id": 13, "typhoon_cat": 3, "dist_bin": 3, "dist_min_km": 201, "dist_max_km": 300, "disruption_days_min":  0, "disruption_days_max": 100, "damage_prob_min": 0.072, "damage_prob_max": 0.090},
+    {"scenario_id": 14, "typhoon_cat": 3, "dist_bin": 4, "dist_min_km": 301, "dist_max_km": 400, "disruption_days_min":  0, "disruption_days_max":  30, "damage_prob_min": 0.036, "damage_prob_max": 0.045},
+    {"scenario_id": 15, "typhoon_cat": 3, "dist_bin": 5, "dist_min_km": 401, "dist_max_km": 500, "disruption_days_min":  0, "disruption_days_max":  10, "damage_prob_min": 0.018, "damage_prob_max": 0.023},
+
+    {"scenario_id": 16, "typhoon_cat": 4, "dist_bin": 1, "dist_min_km":   0, "dist_max_km": 100, "disruption_days_min": 60, "disruption_days_max": 240, "damage_prob_min": 0.396, "damage_prob_max": 0.495},
+    {"scenario_id": 17, "typhoon_cat": 4, "dist_bin": 2, "dist_min_km": 101, "dist_max_km": 200, "disruption_days_min": 50, "disruption_days_max": 190, "damage_prob_min": 0.198, "damage_prob_max": 0.248},
+    {"scenario_id": 18, "typhoon_cat": 4, "dist_bin": 3, "dist_min_km": 201, "dist_max_km": 300, "disruption_days_min": 40, "disruption_days_max": 140, "damage_prob_min": 0.099, "damage_prob_max": 0.124},
+    {"scenario_id": 19, "typhoon_cat": 4, "dist_bin": 4, "dist_min_km": 301, "dist_max_km": 400, "disruption_days_min": 10, "disruption_days_max":  50, "damage_prob_min": 0.050, "damage_prob_max": 0.062},
+    {"scenario_id": 20, "typhoon_cat": 4, "dist_bin": 5, "dist_min_km": 401, "dist_max_km": 500, "disruption_days_min":  0, "disruption_days_max":  40, "damage_prob_min": 0.025, "damage_prob_max": 0.031},
+
+    {"scenario_id": 21, "typhoon_cat": 5, "dist_bin": 1, "dist_min_km":   0, "dist_max_km": 100, "disruption_days_min": 90, "disruption_days_max": 300, "damage_prob_min": 0.792, "damage_prob_max": 0.990},
+    {"scenario_id": 22, "typhoon_cat": 5, "dist_bin": 2, "dist_min_km": 101, "dist_max_km": 200, "disruption_days_min": 80, "disruption_days_max": 250, "damage_prob_min": 0.396, "damage_prob_max": 0.495},
+    {"scenario_id": 23, "typhoon_cat": 5, "dist_bin": 3, "dist_min_km": 201, "dist_max_km": 300, "disruption_days_min": 70, "disruption_days_max": 200, "damage_prob_min": 0.198, "damage_prob_max": 0.248},
+    {"scenario_id": 24, "typhoon_cat": 5, "dist_bin": 4, "dist_min_km": 301, "dist_max_km": 400, "disruption_days_min": 30, "disruption_days_max": 150, "damage_prob_min": 0.099, "damage_prob_max": 0.124},
+    {"scenario_id": 25, "typhoon_cat": 5, "dist_bin": 5, "dist_min_km": 401, "dist_max_km": 500, "disruption_days_min":  0, "disruption_days_max": 100, "damage_prob_min": 0.050, "damage_prob_max": 0.062}
+  ],
+  "historical_frequencies": {
+    "1": 0.476, "2": 0.333, "3": 0.143, "4": 0.095, "5": 0.048,
+    "6": 0.190, "7": 0.143, "8": 0.095, "9": 0.048, "10": 0.000,
+    "11": 0.286, "12": 0.143, "13": 0.095, "14": 0.048, "15": 0.000,
+    "16": 0.190, "17": 0.095, "18": 0.048, "19": 0.000, "20": 0.000,
+    "21": 0.095, "22": 0.048, "23": 0.000, "24": 0.000, "25": 0.000
+  }
+}

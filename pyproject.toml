@@ -1,0 +1,25 @@
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+extend-exclude = ["data/", "outputs/", "logs/"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "ARG"]
+ignore = ["E203"]
+
+[tool.ruff.lint.per-file-ignores]
+# sys.path setup before backend imports (flat src layout, no installed package)
+"tests/*.py" = ["E402"]
+"scripts/*.py" = ["E402"]
+"src/app_streamlit.py" = ["E402"]
+# one-off preprocessing/fitting scripts — short inline lambdas and verbose
+# print-summary lines are clearer here than the alternative
+"scripts/build_processed_data.py" = ["E731", "E501"]
+"scripts/fit_input_distributions.py" = ["E731", "E501"]
+"scripts/e1_parse_ibtracs.py" = ["E731", "E501"]
+"scripts/build_scenario_loss_lookup.py" = ["E731", "E501"]
+"scripts/generate_synthetic_demo_data.py" = ["E731", "E501"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]

@@ -1,0 +1,152 @@
+{
+  "1": {
+    "physical_mean_usd": 41719460,
+    "physical_p95_usd": 45886800,
+    "economic_usd": 1523326,
+    "total_usd": 43242786
+  },
+  "2": {
+    "physical_mean_usd": 20846525,
+    "physical_p95_usd": 22940734,
+    "economic_usd": 146743,
+    "total_usd": 20993268
+  },
+  "3": {
+    "physical_mean_usd": 10427285,
+    "physical_p95_usd": 11460331,
+    "economic_usd": 65965,
+    "total_usd": 10493250
+  },
+  "4": {
+    "physical_mean_usd": 5210919,
+    "physical_p95_usd": 5730817,
+    "economic_usd": 19748,
+    "total_usd": 5230668
+  },
+  "5": {
+    "physical_mean_usd": 2709272,
+    "physical_p95_usd": 3053351,
+    "economic_usd": 1953,
+    "total_usd": 2711225
+  },
+  "6": {
+    "physical_mean_usd": 83487569,
+    "physical_p95_usd": 91777784,
+    "economic_usd": 17809853,
+    "total_usd": 101297422
+  },
+  "7": {
+    "physical_mean_usd": 41699866,
+    "physical_p95_usd": 45852143,
+    "economic_usd": 5655002,
+    "total_usd": 47354868
+  },
+  "8": {
+    "physical_mean_usd": 20855466,
+    "physical_p95_usd": 22933516,
+    "economic_usd": 556169,
+    "total_usd": 21411635
+  },
+  "9": {
+    "physical_mean_usd": 10429586,
+    "physical_p95_usd": 11477138,
+    "economic_usd": 146743,
+    "total_usd": 10576329
+  },
+  "10": {
+    "physical_mean_usd": 5213359,
+    "physical_p95_usd": 5736587,
+    "economic_usd": 1953,
+    "total_usd": 5215312
+  },
+  "11": {
+    "physical_mean_usd": 125072997,
+    "physical_p95_usd": 137592366,
+    "economic_usd": 118671190,
+    "total_usd": 243744187
+  },
+  "12": {
+    "physical_mean_usd": 62514732,
+    "physical_p95_usd": 68810116,
+    "economic_usd": 53890024,
+    "total_usd": 116404756
+  },
+  "13": {
+    "physical_mean_usd": 31297284,
+    "physical_p95_usd": 34416787,
+    "economic_usd": 20047032,
+    "total_usd": 51344316
+  },
+  "14": {
+    "physical_mean_usd": 15639244,
+    "physical_p95_usd": 17205090,
+    "economic_usd": 1523326,
+    "total_usd": 17162570
+  },
+  "15": {
+    "physical_mean_usd": 7924048,
+    "physical_p95_usd": 8784349,
+    "economic_usd": 146743,
+    "total_usd": 8070791
+  },
+  "16": {
+    "physical_mean_usd": 171958817,
+    "physical_p95_usd": 189194131,
+    "economic_usd": 223421266,
+    "total_usd": 395380083
+  },
+  "17": {
+    "physical_mean_usd": 86249653,
+    "physical_p95_usd": 94880441,
+    "economic_usd": 124355016,
+    "total_usd": 210604669
+  },
+  "18": {
+    "physical_mean_usd": 43060279,
+    "physical_p95_usd": 47432330,
+    "economic_usd": 57895591,
+    "total_usd": 100955870
+  },
+  "19": {
+    "physical_mean_usd": 21635703,
+    "physical_p95_usd": 23714882,
+    "economic_usd": 5655002,
+    "total_usd": 27290705
+  },
+  "20": {
+    "physical_mean_usd": 10820023,
+    "physical_p95_usd": 11861071,
+    "economic_usd": 3014703,
+    "total_usd": 13834726
+  },
+  "21": {
+    "physical_mean_usd": 344250372,
+    "physical_p95_usd": 378772949,
+    "economic_usd": 390542488,
+    "total_usd": 734792860
+  },
+  "22": {
+    "physical_mean_usd": 171938650,
+    "physical_p95_usd": 189170197,
+    "economic_usd": 268122532,
+    "total_usd": 440061182
+  },
+  "23": {
+    "physical_mean_usd": 86181116,
+    "physical_p95_usd": 94908253,
+    "economic_usd": 157923381,
+    "total_usd": 244104497
+  },
+  "24": {
+    "physical_mean_usd": 43093607,
+    "physical_p95_usd": 47398985,
+    "economic_usd": 62001564,
+    "total_usd": 105095171
+  },
+  "25": {
+    "physical_mean_usd": 21622032,
+    "physical_p95_usd": 23716440,
+    "economic_usd": 20047032,
+    "total_usd": 41669064
+  }
+}

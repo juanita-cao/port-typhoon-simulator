@@ -1,0 +1,22 @@
+{
+  "_source": "Methodology adapted from Cao & Lam, Reliability Engineering and System Safety (2018) — port configuration below is illustrative (demo values), not a real terminal's operational specs",
+  "ports": {
+    "NPT": {
+      "port_name": "NPT",
+      "num_berths": 14,
+      "num_quay_cranes": 72,
+      "annual_throughput_base_teu": 8500000,
+      "study_start_date": "1994-01-01",
+      "study_end_date": "2015-12-31",
+      "_note_throughput": "Illustrative baseline; actual simulated intact throughput (~9.1-9.2M TEU/yr) is fitted from the synthetic demo data, not from this field directly",
+      "_note_study_period": "study_start/end_date = IBTrACS historical record span (E1/E5 frequency basis), NOT the SimPy simulation horizon (set via SimulationParams.sim_horizon_days, default 365d)",
+      "components": {
+        "quay_cranes": {"count": 72, "unit_value_usd": 1700000},
+        "gantry_cranes": {"count": 190, "unit_value_usd": 1000000},
+        "container_trucks": {"count": 160, "unit_value_usd": 450000},
+        "other_equipment_value_usd": 1800000,
+        "_note": "Illustrative replacement-cost spec; demo values"
+      }
+    }
+  }
+}
