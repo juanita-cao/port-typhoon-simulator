@@ -1,5 +1,7 @@
 # Port Typhoon Risk Simulator
 
+**[Live demo →](https://port-typhoon-simulator.streamlit.app/)**
+
 A simulation-driven decision-support tool that estimates typhoon-induced container-port losses: given a port configuration and a typhoon's category and strike distance, it runs a discrete-event simulation of port operations under disruption, then turns the resulting throughput loss into physical and economic loss estimates with a statistical audit trail behind every number.
 
 Methodology: discrete-event simulation validated with Welch's warm-up method, Kelton's replication-count formula, common random numbers, and Holm-Bonferroni-corrected paired comparisons. **The data is synthetic** — see [Data note](#data-note) below.
