@@ -1,33 +1,33 @@
 # Port Typhoon Risk Simulator
 
+[![Tests](https://github.com/juanita-cao/port-typhoon-simulator/actions/workflows/test.yml/badge.svg)](https://github.com/juanita-cao/port-typhoon-simulator/actions/workflows/test.yml)
+![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue)
+![Streamlit](https://img.shields.io/badge/UI-Streamlit-red)
+
 **[Live demo →](https://port-typhoon-simulator.streamlit.app/)**
 
-A simulation-driven decision-support tool that estimates typhoon-induced container-port losses: given a port configuration and a typhoon's category and strike distance, it runs a discrete-event simulation of port operations under disruption, then turns the resulting throughput loss into physical and economic loss estimates with a statistical audit trail behind every number.
+A discrete-event simulation dashboard for estimating typhoon-induced container-port throughput loss.
 
-Methodology: discrete-event simulation validated with Welch's warm-up method, Kelton's replication-count formula, common random numbers, and Holm-Bonferroni-corrected paired comparisons. **The data is synthetic** — see [Data note](#data-note) below.
+Given a port configuration and a typhoon scenario, the system simulates disrupted port operations, estimates physical and economic loss, and writes reproducible statistical artifacts for review. **The data is synthetic** — see [Data note](#data-note) below.
+
+This project uses a contract-first simulation workflow — schemas before logic, validation separate from generation, every run reproducible and auditable.
+
+---
+
+## Demo Preview
+
+![Dashboard preview](docs/assets/dashboard_preview.png)
 
 ---
 
 ## What this demonstrates
 
-- **A pipeline, not a black box.** Every step (load typhoon data → simulate → estimate physical loss → estimate economic loss → aggregate) has an explicit Pydantic schema at its input and output. A malformed value fails loudly at the boundary instead of propagating silently three steps downstream.
-- **Statistical rigor over a single number.** Replication count isn't a guess — it's derived from a pilot study via Kelton's (2002) formula. Scenarios are compared using common random numbers (CRN) so a paired t-test is valid, corrected for multiple comparisons (Holm-Bonferroni), with an effect size (Cohen's dz) alongside the p-value — because "statistically significant" and "operationally worth acting on" are different questions, and the model answers both.
-- **Verification before trust.** Every run is checked against face-validity rules (does throughput actually decrease as the typhoon gets closer and stronger?) before its output is allowed downstream, plus a sanity-check comparison against a benchmark reference — both fully automated, both producing an artifact a reviewer can open and check by hand.
-- **Reproducible artifacts.** Every run writes a timestamped folder with the full comparison table, the verification/validation reports, and a human-readable summary — not just whatever happened to print to the console.
-- **Design before code.** The three documents in [`docs/`](docs/) were written before the corresponding implementation: problem framing and pipeline shape first, then the simulation's statistical design, then the frontend's state machine — in that order, each reviewed before the next was built on top of it.
-
----
-
-## Engineering Approach
-
-This project uses a contract-first simulation workflow:
-
-1. Define input/output schemas before implementing pipeline logic.
-2. Separate simulation execution, validation checks, and decision interpretation.
-3. Preserve raw replication outputs for reproducibility and statistical review.
-4. Use explicit verification and validation gates before presenting results as decision support.
-5. Persist run metadata, comparison tables, and artifacts for auditability.
-6. Keep the UI layer separate from the simulation pipeline through a ViewModel-style interface.
+- **Contract-first pipeline design** — each pipeline step has explicit Pydantic input/output schemas; a malformed value fails loudly at the boundary instead of propagating silently three steps downstream.
+- **Discrete-event simulation under disruption** — SimPy models port operations under typhoon-induced capacity loss.
+- **Statistical V&V** — Welch's warm-up method, Kelton's (2002) replication-sizing formula, common random numbers, paired t-tests, and Holm-Bonferroni correction.
+- **Decision-oriented output** — separates statistical significance (p-value) from operationally meaningful loss (effect size), because they answer different questions.
+- **Reproducible artifacts** — each run persists raw outputs, the comparison table, V&V reports, and a human-readable summary.
+- **Design-before-code workflow** — the three documents in [`docs/`](docs/) were written before the corresponding implementation, each reviewed before the next was built on top of it.
 
 ---
 
@@ -78,7 +78,7 @@ CI runs the same lint + test commands on every push — see [`.github/workflows/
 
 The original version of this project used a real container terminal's confidential 2016 vessel-call log. That dataset isn't redistributable, so this public version generates a **synthetic vessel-call log** (`scripts/generate_synthetic_demo_data.py`) with the same column structure and a similar order of magnitude, then runs it through the same distribution-fitting pipeline (`build_processed_data.py` → `fit_input_distributions.py`) that the original used. The port itself ("NPT") and its berth/crane counts are illustrative, not a real terminal's specs. The validation benchmark in `verification_validation.py` is likewise an illustrative reference value, calibrated to exercise the same pass/fail logic a real validation would use.
 
-Everything else — the pipeline architecture, the schemas, the statistical methodology, the test suite — is unchanged from the original.
+The public version preserves the same engineering structure: pipeline architecture, schemas, statistical workflow, validation checks, and tests. Only the non-redistributable operational data and identifying terminal details have been replaced.
 
 The typhoon track data (IBTrACS) is a real, public meteorological dataset and is used as-is.
 
@@ -98,8 +98,19 @@ tests/            79 tests covering distributions, replication, output analysis,
 
 ---
 
-## Status
+## Current Scope
 
-Implemented and tested: IBTrACS parsing and scenario classification, the simulation step, physical/economic loss estimation, loss aggregation, the full statistical verification/validation layer, the track/port-marker viz transform, and the Streamlit frontend's single-scenario flow. Per-step status: `docs/design_backend.md` §9, `docs/design_frontend.md` §12, `docs/design_simulation.md` §8.
+Implemented:
+- IBTrACS typhoon parsing and scenario classification
+- SimPy port-disruption simulation
+- Physical and economic loss estimation
+- Statistical verification/validation checks
+- Streamlit single-scenario UI
+- Reproducible artifact export
 
-Hazard type is typhoon only. The sidebar's "Earthquake", "Tsunami", etc. entries are shown greyed out (not clickable) to indicate the data model was designed to extend to other hazard types — none of them are implemented or planned for this demo.
+Not implemented:
+- Earthquake / tsunami / other hazard types — the sidebar shows them greyed out (not clickable) to indicate the data model was designed to extend beyond typhoon, not as a roadmap commitment
+- Production-grade calibration against confidential terminal records
+- Multi-user authentication or persistent cloud storage
+
+Per-step implementation status: `docs/design_backend.md` §9, `docs/design_frontend.md` §12, `docs/design_simulation.md` §8.
