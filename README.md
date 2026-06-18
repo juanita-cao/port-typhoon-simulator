@@ -88,5 +88,3 @@ tests/            79 tests covering distributions, replication, output analysis,
 Implemented and tested: IBTrACS parsing and scenario classification, the simulation step, physical/economic loss estimation, loss aggregation, the full statistical verification/validation layer, the track/port-marker viz transform, and the Streamlit frontend's single-scenario flow. Per-step status: `docs/design_backend.md` §9, `docs/design_frontend.md` §12, `docs/design_simulation.md` §8.
 
 Hazard type is typhoon only. The sidebar's "Earthquake", "Tsunami", etc. entries are shown greyed out (not clickable) to indicate the data model was designed to extend to other hazard types — none of them are implemented or planned for this demo.
-
-Not built: a live runtime-integrity-check + audit-trail layer that would run alongside the main pipeline (separate from the simulation's own internal verification/validation, which is done) — see `docs/design_backend.md` §4 and §9.
