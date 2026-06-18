@@ -10,7 +10,7 @@ A discrete-event simulation dashboard for estimating typhoon-induced container-p
 
 Given a port configuration and a typhoon scenario, the system simulates disrupted port operations, estimates physical and economic loss, and writes reproducible statistical artifacts for review. **The data is synthetic** — see [Data note](#data-note) below.
 
-This project uses a contract-first simulation workflow — schemas before logic, validation separate from generation, every run reproducible and auditable.
+This project uses a contract-first simulation workflow — schemas before logic, validation separate from result interpretation, and reproducible artifacts for every run.
 
 ---
 
@@ -22,7 +22,7 @@ This project uses a contract-first simulation workflow — schemas before logic,
 
 ## What this demonstrates
 
-- **Contract-first pipeline design** — each pipeline step has explicit Pydantic input/output schemas; a malformed value fails loudly at the boundary instead of propagating silently three steps downstream.
+- **Contract-first pipeline design** — each step has explicit Pydantic input/output schemas, so malformed values fail at the boundary instead of propagating downstream.
 - **Discrete-event simulation under disruption** — SimPy models port operations under typhoon-induced capacity loss.
 - **Statistical V&V** — Welch's warm-up method, Kelton's (2002) replication-sizing formula, common random numbers, paired t-tests, and Holm-Bonferroni correction.
 - **Decision-oriented output** — separates statistical significance (p-value) from operationally meaningful loss (effect size), because they answer different questions.
@@ -43,15 +43,20 @@ IBTrACS data ──► load typhoon data ──► run simulation ──► phys
                                                                                       Streamlit + map UI
 ```
 
-Full pipeline table, data contracts, and sequence diagrams: [`docs/design_backend.md`](docs/design_backend.md).
-Simulation design (entity model, distribution fitting, replication plan, verification/validation): [`docs/design_simulation.md`](docs/design_simulation.md).
-Frontend design (state machine, view models, screen flow): [`docs/design_frontend.md`](docs/design_frontend.md).
+Design documents:
+- [`docs/design_backend.md`](docs/design_backend.md) — pipeline table, data contracts, sequence diagrams
+- [`docs/design_simulation.md`](docs/design_simulation.md) — entity model, distribution fitting, replication plan, V&V
+- [`docs/design_frontend.md`](docs/design_frontend.md) — state machine, ViewModel, screen flow
 
 ---
 
 ## Quickstart
 
 ```bash
+git clone https://github.com/juanita-cao/port-typhoon-simulator.git
+cd port-typhoon-simulator
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 
 # run the test suite (79 tests: distributions, CRN stream independence,
@@ -76,7 +81,7 @@ CI runs the same lint + test commands on every push — see [`.github/workflows/
 
 ## Data note
 
-The original version of this project used a real container terminal's confidential 2016 vessel-call log. That dataset isn't redistributable, so this public version generates a **synthetic vessel-call log** (`scripts/generate_synthetic_demo_data.py`) with the same column structure and a similar order of magnitude, then runs it through the same distribution-fitting pipeline (`build_processed_data.py` → `fit_input_distributions.py`) that the original used. The port itself ("NPT") and its berth/crane counts are illustrative, not a real terminal's specs. The validation benchmark in `verification_validation.py` is likewise an illustrative reference value, calibrated to exercise the same pass/fail logic a real validation would use.
+A prior internal version was calibrated with non-redistributable terminal operation data. This public version generates a **synthetic vessel-call log** (`scripts/generate_synthetic_demo_data.py`) with the same column structure and a similar order of magnitude, then runs it through the same distribution-fitting pipeline (`build_processed_data.py` → `fit_input_distributions.py`) that the original used. The port itself ("NPT") and its berth/crane counts are illustrative, not a real terminal's specs. The validation benchmark in `verification_validation.py` is likewise an illustrative reference value, calibrated to exercise the same pass/fail logic a real validation would use.
 
 The public version preserves the same engineering structure: pipeline architecture, schemas, statistical workflow, validation checks, and tests. Only the non-redistributable operational data and identifying terminal details have been replaced.
 
