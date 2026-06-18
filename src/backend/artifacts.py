@@ -4,7 +4,7 @@ Three artifact categories persisted after each E-node completes:
   Run Metadata     → JSON  (run_id / timestamp / protocol_version / design_doc_hash)
   Pipeline Edge    → JSON  (Pydantic schema for downstream E-nodes / pipeline restart)
   V&V              → CSV   (comparison table + statistical-comparison stats for audit)
-  Human Audit      → TXT   (Table 9 matrix for stakeholder review)
+  Human Audit      → TXT   (5×5 comparison matrix for stakeholder review)
 
 Default output path: {service_root}/outputs/{timestamp}_{run_id_short}/
 One folder per run — never overwritten. Pass output_dir explicitly to override.
@@ -24,7 +24,7 @@ from backend.schemas import (
     PhysicalLossEstimates,
     SimulationResults,
 )
-from backend.simulation.report import build_comparison_table, format_table9
+from backend.simulation.report import build_comparison_table, format_comparison_matrix
 from backend.simulation.verification_validation import (
     run_vld_comparison,
     run_vrf_checks,
@@ -97,14 +97,14 @@ def save_e2_artifacts(
     """Persist E2 artifacts. Returns the directory written to.
 
     Files written:
-        e2_run_metadata.json     Traceability — run_id / timestamp / protocol_version / design_doc_hash
-        e2_output.json           Pipeline edge — full SimulationResults for E4/pipeline
-        e2_warmup_analysis.json  V&V          — Welch warm-up analysis result (steady-state detection)
-        e2_comparison_table.csv  V&V          — 25-row comparison table + statistical-comparison stats
-        e2_s44_stats.csv         V&V          — statistical decision columns + run metadata injected
-        e2_vrf_report.json       V&V          — VRF (Verification — face-validity check) results
-        e2_vld_comparison.json   V&V          — VLD (Validation — sanity check vs benchmark reference)
-        e2_table9.txt            Human        — Table 9-style 5×5 matrix
+        e2_run_metadata.json       Traceability — run_id / timestamp / protocol_version / design_doc_hash
+        e2_output.json             Pipeline edge — full SimulationResults for E4/pipeline
+        e2_warmup_analysis.json    V&V          — Welch warm-up analysis result (steady-state detection)
+        e2_comparison_table.csv    V&V          — 25-row comparison table + statistical-comparison stats
+        e2_decision_stats.csv      V&V          — statistical decision columns + run metadata injected
+        e2_vrf_report.json         V&V          — VRF (Verification — face-validity check) results
+        e2_vld_comparison.json     V&V          — VLD (Validation — sanity check vs benchmark reference)
+        e2_comparison_matrix.txt   Human        — 5×5 category x distance-bin comparison matrix
     """
     out = Path(output_dir) if output_dir is not None else _default_output_dir(run_metadata)
     out.mkdir(parents=True, exist_ok=True)
@@ -133,13 +133,13 @@ def save_e2_artifacts(
     comp = build_comparison_table(results, include_paired_stats=True)
     comp.to_csv(out / "e2_comparison_table.csv", index=False)
 
-    # s44_stats: inject run metadata as first columns so each CSV is self-describing
-    s44_df = comp[[c for c in _COMPARISON_COLS if c in comp.columns]].copy()
-    s44_df.insert(0, "run_id",           run_metadata["run_id"])
-    s44_df.insert(1, "timestamp",        run_metadata["timestamp"])
-    s44_df.insert(2, "protocol_version", run_metadata["protocol_version"])
-    s44_df.insert(3, "design_doc_hash",  run_metadata["design_doc_hash"])
-    s44_df.to_csv(out / "e2_s44_stats.csv", index=False)
+    # decision_stats: inject run metadata as first columns so each CSV is self-describing
+    decision_stats_df = comp[[c for c in _COMPARISON_COLS if c in comp.columns]].copy()
+    decision_stats_df.insert(0, "run_id",           run_metadata["run_id"])
+    decision_stats_df.insert(1, "timestamp",        run_metadata["timestamp"])
+    decision_stats_df.insert(2, "protocol_version", run_metadata["protocol_version"])
+    decision_stats_df.insert(3, "design_doc_hash",  run_metadata["design_doc_hash"])
+    decision_stats_df.to_csv(out / "e2_decision_stats.csv", index=False)
 
     # V&V Artifacts — VRF (Verification — programmatic face-validity checks)
     vrf_checks = run_vrf_checks(results)
@@ -163,7 +163,7 @@ def save_e2_artifacts(
     )
 
     # Human Audit Artifact
-    (out / "e2_table9.txt").write_text(format_table9(comp))
+    (out / "e2_comparison_matrix.txt").write_text(format_comparison_matrix(comp))
 
     return out, vrf_report, vld_result
 

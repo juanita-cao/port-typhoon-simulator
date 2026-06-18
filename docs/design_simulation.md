@@ -16,7 +16,7 @@
 | `throughput_teu` | total container volume handled per replication | TEU/year | higher is better |
 | `served_ship_calls` | vessel calls completed (including departure) per replication | calls/year | higher is better |
 
-> `teu_per_call = lpc × 1.75`. The 1.75 TEU-per-crane-lift factor follows the validation approach in Cao & Lam (2018): modern terminals handle a mix of 40ft (2 TEU) and 20ft (1 TEU) containers, averaging roughly 1.75 TEU per lift. `lpc` (lifts per call) drives service time; `teu_per_call` drives the throughput count — the two are kept separate throughout.
+> `teu_per_call = lpc × 1.75`. The 1.75 TEU-per-crane-lift factor reflects a typical mix of 40ft (2 TEU) and 20ft (1 TEU) containers at modern terminals, averaging roughly 1.75 TEU per lift. `lpc` (lifts per call) drives service time; `teu_per_call` drives the throughput count — the two are kept separate throughout.
 
 **Out of scope:**
 - physical loss estimation (E3)
@@ -51,7 +51,7 @@
 - Ship arrivals: a Poisson process — inter-arrival times are exponentially distributed, fitted from the (synthetic, see §3) vessel-call log.
 - Crane allocation: assigned by LPC-group probability, not a fixed count per berth — larger cargo calls get more cranes.
 - Service time = idle-before + `lpc / (cranes × crane_efficiency)` + idle-after, all in hours.
-- Disruption: complete closure (an Arena "Failure data"-equivalent model, following Cao & Lam 2018 §4.3) — cranes are fully unavailable for the entire disruption+recovery window, then fully restored.
+- Disruption: complete closure (an Arena "Failure data"-equivalent model) — cranes are fully unavailable for the entire disruption+recovery window, then fully restored.
 - Simulation type: **steady-state**. The port runs 24/7/365 with no natural termination event; the 365-day horizon is an observation window, not a stopping condition. Starting from an empty port introduces a startup bias, so a warm-up period is required (§4).
 
 ### 2.2 Entity attributes
@@ -213,9 +213,9 @@ If any check fails, the pipeline returns a `FAILED_VALIDATION` status instead of
 
 ### 6.2 VLD — sanity-check comparison against a benchmark reference
 
-Cao & Lam (2018) validate their simulation against the terminal's actual 7-month operational record (Table 6 in the paper), annualized by ×12/7, with a tolerance band rather than an exact match, since there's no independent paired observation to test against statistically — just "is the simulated output in a plausible neighborhood of the real one."
+A common pattern for validating a port-operations simulation against reality: compare the intact-scenario output against a real operational record over some observation window, annualized to match the simulation's horizon, using a tolerance band rather than an exact match — since there's no independent paired observation to test against statistically, just "is the simulated output in a plausible neighborhood of the real one."
 
-This public demo follows the same mechanics with an **illustrative benchmark reference** calibrated for the demo, since the original confidential operational record can't be redistributed:
+This demo follows the same mechanics with an **illustrative benchmark reference** calibrated for the demo, since the original confidential operational record can't be redistributed:
 
 | KPI | 7-month reference | Annualized (×12/7) |
 |-----|---------|------|
@@ -242,17 +242,17 @@ A representative run (270 replications, intact throughput 9.156M TEU, 95% CI ±0
 
 ## 8. Implementation status
 
-| Area | File | Status |
-|------|------|--------|
-| Distributions | `simulation/distributions.py` | done — loads fitted parameters at import time, samples each variable |
-| SimPy model | `simulation/simulation.py` | done — ship arrival process, disruption process, warm-up guard |
-| Replication / CRN | `simulation/replication.py` | done — 3-stream seed separation, `run_single_replication`, `run_scenario` |
-| Warm-up estimation | `simulation/warmup_analysis.py` | done — Welch's method |
-| Verification / validation | `simulation/verification_validation.py` | done — VRF checks + VLD benchmark comparison |
-| Output analysis | `simulation/output_analysis.py` | done — normality, CI selection, paired comparison, Holm correction |
-| Report assembly | `simulation/report.py` | done — builds `SimulationResults`, the comparison table |
-| Artifact persistence | `backend/artifacts.py` | done — every run writes a versioned folder under `outputs/` |
-| Tests | `tests/` | 76 tests — distributions, CRN stream independence, replication-count formula, boundary cases |
+| Task | Area | File | Status |
+|------|------|------|--------|
+| T1 | Distributions | `simulation/distributions.py` | ✅ done — loads fitted parameters at import time, samples each variable |
+| T2 | SimPy model | `simulation/simulation.py` | ✅ done — ship arrival process, disruption process, warm-up guard |
+| T3 | Replication / CRN | `simulation/replication.py` | ✅ done — 3-stream seed separation, `run_single_replication`, `run_scenario` |
+| T4 | Warm-up estimation | `simulation/warmup_analysis.py` | ✅ done — Welch's method |
+| T5 | Verification / validation | `simulation/verification_validation.py` | ✅ done — VRF checks + VLD benchmark comparison |
+| T6 | Output analysis | `simulation/output_analysis.py` | ✅ done — normality, CI selection, paired comparison, Holm correction |
+| T7 | Report assembly | `simulation/report.py` | ✅ done — builds `SimulationResults`, the comparison table |
+| T8 | Artifact persistence | `backend/artifacts.py` | ✅ done — every run writes a versioned folder under `outputs/` |
+| T9 | Tests | `tests/` | ✅ 76 tests — distributions, CRN stream independence, replication-count formula, boundary cases |
 
 **Known limitation, documented rather than hidden:** the disruption-strategy implementation (complete closure via mutating the SimPy `Resource`'s capacity) is a simplification appropriate for a demo; a production model would more likely use a dedicated failure-process abstraction with explicit interruption semantics for ships already mid-service. The current implementation doesn't interrupt in-service ships, which is noted in the comparison-table footnote generated by `report.py`.
 

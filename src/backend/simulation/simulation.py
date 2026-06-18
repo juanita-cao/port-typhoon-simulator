@@ -2,11 +2,11 @@
 """SimPy DES process logic for port_typhoon_simulator.
 
 Entities: Ship (arrives → queue for berth → service → depart)
-Resources: Port.berths (16 SimPy Resource tokens)
+Resources: Port.berths (SimPy Resource tokens, count = num_berths)
 Disruption: event-based complete port closure (design_simulation.md, Simulation flow section)
 
 Cranes are NOT modelled as a separate SimPy Resource — they determine service
-time via cranes_for_group(), which is the paper's approach for this demo.
+time via cranes_for_group() instead.
 
 No unit tests here — verified by VRF (Verification — face-validity checks).
 CRN stream setup and replication management live in replication.py.

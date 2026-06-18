@@ -1,7 +1,7 @@
 """Port Typhoon Risk Simulator — Streamlit frontend.
 
-Launch (mock mode):  PTS_MOCK=1 conda run -n somr streamlit run src/app_streamlit.py
-Launch (real mode):  conda run -n somr streamlit run src/app_streamlit.py
+Launch (mock mode):  PTS_MOCK=1 streamlit run src/app_streamlit.py
+Launch (real mode):  streamlit run src/app_streamlit.py
 """
 from __future__ import annotations
 
@@ -593,29 +593,41 @@ def _build_mock_results_vm(history: list[dict]) -> ResultsViewModel:
 # eXecute helpers (side effects; separate from render functions)
 # ---------------------------------------------------------------------------
 
-def _export_csv(output_dir: str) -> bytes:
-    """Return CSV bytes from output_dir, or scenario_loss_lookup fallback."""
-    base = ROOT / output_dir
-    csv_files = sorted(base.glob("*.csv")) if base.exists() else []
-    if csv_files:
-        return csv_files[0].read_bytes()
-    lookup_path = ROOT / "src" / "backend" / "configs" / "scenario_loss_lookup.json"
-    lookup: dict = json.loads(lookup_path.read_text()) if lookup_path.exists() else {}
-    lines = ["scenario_id,physical_mean_usd,physical_p95_usd,economic_usd,total_usd"]
-    for sid_str, v in sorted(lookup.items(), key=lambda x: int(x[0])):
-        lines.append(f"{sid_str},{v['physical_mean_usd']},{v['physical_p95_usd']},{v['economic_usd']},{v['total_usd']}")
-    return "\n".join(lines).encode()
+def _scenario_summary_csv(vm: ResultsViewModel) -> str:
+    """CSV of exactly what Tab 1 (Loss Summary) shows for the run on screen."""
+    lines = ["section,label,value"]
+    lines.append(f"summary,Typhoon,{vm.typhoon_display_name}")
+    lines.append(f"summary,Decreased TEU,{vm.decreased_teu}")
+    lines.append(f"summary,Decreased TEU %,{vm.decreased_teu_pct}")
+    lines.append(f"summary,Economic Loss USD,{vm.economic_loss_usd}")
+    lines.append(f"summary,Physical Loss Mean USD,{vm.physical_loss_total_mean_usd}")
+    lines.append(f"summary,Physical Loss P95 USD,{vm.physical_loss_total_p95_usd}")
+    lines.append(f"summary,Total Loss USD,{vm.total_loss_usd}")
+    for row in vm.equipment_rows:
+        lines.append(f"equipment,{row.label} Mean USD,{row.mean_usd}")
+        lines.append(f"equipment,{row.label} P95 USD,{row.p95_usd}")
+    return "\n".join(lines)
 
 
-def _export_zip(output_dir: str) -> bytes:
-    """Return ZIP bytes of all artifacts in output_dir."""
-    base = ROOT / output_dir
+def _historical_typhoons_csv(vm: ResultsViewModel) -> str:
+    """CSV of exactly what Tab 2 (Historical Records) shows."""
+    lines = ["year,name,category,dist_km,loss_usd"]
+    for row in vm.historical_typhoons:
+        lines.append(f"{row.year},{row.name},{row.category},{row.dist_km},{row.loss_usd}")
+    return "\n".join(lines)
+
+
+def _export_csv(vm: ResultsViewModel) -> bytes:
+    """Return CSV bytes for the run currently shown on screen (not all 25 scenarios)."""
+    return _scenario_summary_csv(vm).encode()
+
+
+def _export_zip(vm: ResultsViewModel) -> bytes:
+    """Return a ZIP of the on-screen scenario summary + historical records — nothing else."""
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
-        if base.exists():
-            for f in sorted(base.rglob("*")):
-                if f.is_file():
-                    zf.write(f, f.relative_to(base))
+        zf.writestr("scenario_summary.csv", _scenario_summary_csv(vm))
+        zf.writestr("historical_typhoons.csv", _historical_typhoons_csv(vm))
     return buf.getvalue()
 
 
@@ -713,7 +725,7 @@ def _render_sidebar_config(
 # Render: RESULTS sidebar (pure view — downloads are eXecute, initiated here)
 # ---------------------------------------------------------------------------
 
-def _render_sidebar_results(vm: ResultsViewModel, output_dir: str | None) -> None:
+def _render_sidebar_results(vm: ResultsViewModel) -> None:
     st.sidebar.markdown(f"""
 <div class="pts-port-info">
 <span style="font-size:14px;font-weight:600;color:{_C_TEXT}">Container Port A</span><br>
@@ -723,22 +735,21 @@ def _render_sidebar_results(vm: ResultsViewModel, output_dir: str | None) -> Non
 """, unsafe_allow_html=True)
     st.sidebar.divider()
 
-    if output_dir:
-        csv_bytes = _export_csv(output_dir)
-        st.sidebar.download_button(
-            "↓ Download CSV",
-            data=csv_bytes,
-            file_name="pts_scenario_losses.csv",
-            mime="text/csv",
-            use_container_width=True,
-        )
-        zip_bytes = _export_zip(output_dir)
-        st.sidebar.download_button(
-            "↓ Download ZIP",
-            data=zip_bytes,
-            file_name="pts_run_artifacts.zip",
-            mime="application/zip",
-            use_container_width=True,
+    csv_bytes = _export_csv(vm)
+    st.sidebar.download_button(
+        "↓ Download CSV",
+        data=csv_bytes,
+        file_name="pts_scenario_losses.csv",
+        mime="text/csv",
+        use_container_width=True,
+    )
+    zip_bytes = _export_zip(vm)
+    st.sidebar.download_button(
+        "↓ Download ZIP",
+        data=zip_bytes,
+        file_name="pts_run_artifacts.zip",
+        mime="application/zip",
+        use_container_width=True,
         )
     st.sidebar.divider()
 
@@ -1019,9 +1030,8 @@ def main() -> None:
             return
 
         vm = ResultsViewModel.model_validate(raw_vm)
-        output_dir: str | None = st.session_state.get("output_dir")
 
-        _render_sidebar_results(vm, output_dir)
+        _render_sidebar_results(vm)
 
         if st.sidebar.button("↺  New Analysis", use_container_width=True):
             tr = f_state("RESULTS", "new_analysis_clicked")

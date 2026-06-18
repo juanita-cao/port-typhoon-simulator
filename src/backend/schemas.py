@@ -184,7 +184,7 @@ class PhysicalLossPerScenario(BaseModel):
     loss_mean_usd: float = Field(ge=0)
     loss_std_usd: float = Field(ge=0)
     loss_p95_usd: float = Field(ge=0)
-    # Per-equipment breakdown (Table 7 components); default 0 keeps existing callers valid
+    # Per-equipment breakdown; default 0 keeps existing callers valid
     quay_crane_loss_mean_usd: float = Field(ge=0, default=0.0)
     quay_crane_loss_p95_usd: float = Field(ge=0, default=0.0)
     gantry_crane_loss_mean_usd: float = Field(ge=0, default=0.0)
@@ -258,21 +258,6 @@ class TyphoonTrackViz(BaseModel):
     category: int = Field(ge=1, le=5)
 
 
-class RiskPoint(BaseModel):
-    lon: float
-    lat: float
-    weight: float = Field(ge=0)
-
-
-class ScenarioCell(BaseModel):
-    scenario_id: int = Field(ge=1, le=25)
-    typhoon_cat: int = Field(ge=1, le=5)
-    dist_bin: int = Field(ge=1, le=5)
-    total_loss_usd: float = Field(ge=0)
-    color_rgba: list[int]
-    label: str
-
-
 class PortMarker(BaseModel):
     lon: float
     lat: float
@@ -280,9 +265,10 @@ class PortMarker(BaseModel):
 
 
 class VizPayload(BaseModel):
+    """E6 output — track-display data only. Risk heatmap and the 5x5
+    scenario grid were both descoped from the frontend (see design_frontend.md);
+    this schema covers only what the UI actually renders."""
     typhoon_tracks: list[TyphoonTrackViz]
-    risk_heatmap_points: list[RiskPoint]
-    scenario_grid_cells: list[ScenarioCell] = Field(min_length=25, max_length=25)
     port_marker: PortMarker
 
 

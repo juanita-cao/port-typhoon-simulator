@@ -12,7 +12,7 @@ Output: data/raw/raw_data.xlsx, sheet "2016", header row 3 (matches the
 layout build_processed_data.py expects from the original report).
 
 Usage:
-    conda run -n somr python scripts/generate_synthetic_demo_data.py
+    python scripts/generate_synthetic_demo_data.py
 """
 
 from __future__ import annotations

@@ -1,5 +1,10 @@
 """E-node implementations for port_typhoon_simulator.
 
+E1: e1_load_typhoon_data
+  - Parses IBTrACS WP-basin track data; classifies each qualifying storm
+    into one of the 25 disruption scenarios (category x distance bin)
+  - Returns TyphoonTrackData (validated Pydantic schema)
+
 E2: e2_run_simulation
   - Loads PortConfig and ScenarioMatrix from pipeline context
   - Runs intact baseline + all 25 disruption scenarios
@@ -14,10 +19,12 @@ E3: e3_estimate_physical_loss
 from __future__ import annotations
 
 import json
+import math
 import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 from backend.artifacts import (
     build_run_metadata,
@@ -36,20 +43,163 @@ from backend.schemas import (
     PhysicalLossPerScenario,
     PortComponents,
     PortConfig,
+    PortMarker,
     ScenarioLoss,
     ScenarioMatrix,
     SimulationParams,
     SimulationResults,
+    TrackPoint,
+    TyphoonEvent,
+    TyphoonTrackData,
+    TyphoonTrackViz,
+    VizPayload,
 )
 from backend.simulation.replication import run_scenario
 from backend.simulation.report import (
     build_comparison_table,
     build_simulation_results,
-    format_table9,
+    format_comparison_matrix,
 )
 from backend.simulation.warmup_analysis import estimate_warmup_days
 
 _CONFIGS_DIR = Path(__file__).parent / "configs"
+
+# =============================================================================
+# E1 · e1_load_typhoon_data
+# =============================================================================
+
+# Wind-speed fill default (used only where IBTrACS USA_WIND is missing),
+# by Saffir-Simpson category — mid-range of the SS scale, in knots.
+_CAT_VMAX_KT: dict[int, float] = {-1: 25, 0: 45, 1: 70, 2: 90, 3: 105, 4: 125, 5: 150}
+
+
+def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    r = 6371.0
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlambda = math.radians(lon2 - lon1)
+    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
+    return r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+def _dist_bin_for(dist_km: float, radius_km: float) -> int:
+    bin_width = radius_km / 5
+    for i in range(1, 6):
+        if dist_km <= bin_width * i:
+            return i
+    return 5
+
+
+def _fill_vmax(wind: pd.Series, cat: pd.Series) -> pd.Series:
+    """Interpolate missing USA_WIND values; fall back to a category default."""
+    s = pd.to_numeric(wind, errors="coerce").interpolate(method="linear", limit_direction="both")
+    mask = s.isna()
+    if mask.any():
+        s[mask] = cat[mask].map(lambda c: _CAT_VMAX_KT.get(c, _CAT_VMAX_KT[1]))
+    return s.round(1)
+
+
+def e1_load_typhoon_data(
+    ibtracs_path: Path,
+    port_lat: float,
+    port_lon: float,
+    radius_km: float = 500.0,
+    study_years: tuple[int, int] = (1994, 2026),
+    port_name: str = "NPT",
+    track_box_km: float = 2000.0,
+) -> TyphoonTrackData:
+    """Parse IBTrACS WP-basin data into a validated TyphoonTrackData (E1).
+
+    A storm qualifies if at least one of its track points falls within
+    radius_km of the port. Each qualifying storm is classified into one of
+    the 25 disruption scenarios by its peak Saffir-Simpson category while
+    near the port and its closest-approach distance bin. Every track point
+    within track_box_km is kept (for map animation); points beyond it are
+    dropped to keep the payload small.
+    """
+    df = pd.read_csv(
+        ibtracs_path,
+        skiprows=[1],  # row 1 = units line
+        na_values=[" ", ""],
+        low_memory=False,
+        usecols=["SID", "SEASON", "NAME", "ISO_TIME", "LAT", "LON", "USA_WIND", "USA_SSHS"],
+        dtype={"SEASON": "Int64", "USA_SSHS": "Int64"},
+    )
+    df = df[df["SEASON"].between(study_years[0], study_years[1])].copy()
+    df["ISO_TIME"] = pd.to_datetime(df["ISO_TIME"], errors="coerce")
+    df["LAT"] = pd.to_numeric(df["LAT"], errors="coerce")
+    df["LON"] = pd.to_numeric(df["LON"], errors="coerce")
+    df.dropna(subset=["LAT", "LON", "ISO_TIME"], inplace=True)
+
+    df["dist_km"] = df.apply(
+        lambda r: _haversine_km(r["LAT"], r["LON"], port_lat, port_lon), axis=1
+    )
+
+    events: list[TyphoonEvent] = []
+    for sid, grp in df.groupby("SID"):
+        grp_sorted = grp.sort_values("ISO_TIME")
+        near = grp_sorted[grp_sorted["dist_km"] <= radius_km]
+        if near.empty:
+            continue
+
+        cat_series = near["USA_SSHS"].dropna()
+        if cat_series.empty:
+            cat_series = grp_sorted["USA_SSHS"].dropna()
+        if cat_series.empty:
+            continue
+        max_cat = int(cat_series.max())
+        if max_cat < 1:
+            continue  # tropical storm or weaker — skip
+
+        closest = near.loc[near["dist_km"].idxmin()]
+        min_dist = float(closest["dist_km"])
+        dbin = _dist_bin_for(min_dist, radius_km)
+        scen_id = (max_cat - 1) * 5 + dbin
+
+        box = grp_sorted[grp_sorted["dist_km"] <= track_box_km]
+        if len(box) < 2:
+            continue  # TrackPoint schema requires >= 2 points
+
+        cat_col = pd.to_numeric(box["USA_SSHS"], errors="coerce").fillna(1).clip(-1, 5)
+        vmax = _fill_vmax(box["USA_WIND"], cat_col)
+
+        track_points = [
+            TrackPoint(
+                lat=round(float(r["LAT"]), 4),
+                lon=round(float(r["LON"]), 4),
+                wind_speed_kt=float(vmax.loc[idx]),
+                timestamp=r["ISO_TIME"],
+            )
+            for idx, r in box.iterrows()
+        ]
+
+        cat_at_closest = (
+            pd.to_numeric(pd.Series([closest["USA_SSHS"]]), errors="coerce").fillna(1).clip(-1, 5)
+        )
+        wind_at_strike = float(_fill_vmax(pd.Series([closest["USA_WIND"]]), cat_at_closest).iloc[0])
+
+        events.append(TyphoonEvent(
+            storm_id=str(sid),
+            name=str(grp_sorted["NAME"].iloc[0]).strip().title(),
+            year=int(grp_sorted["SEASON"].iloc[0]),
+            month=int(closest["ISO_TIME"].month),
+            track_points=track_points,
+            min_distance_km=round(min_dist, 1),
+            wind_speed_at_strike_kt=wind_at_strike,
+            saffir_simpson_cat=max_cat,
+            distance_bin=dbin,
+            scenario_id=scen_id,
+        ))
+
+    events.sort(key=lambda e: e.year)
+    return TyphoonTrackData(
+        port_name=port_name,
+        port_lat=port_lat,
+        port_lon=port_lon,
+        study_years=study_years,
+        events=events,
+        total_event_count=len(events),
+    )
 
 
 # =============================================================================
@@ -110,7 +260,7 @@ def e2_run_simulation(
     Args:
         sim_params:     override defaults (n_replications, horizon, warm_up, etc.)
         port_name:      port key in port_configs.json (default "NPT")
-        verbose:        print Table 9 matrix + statistical-comparison signal summary after completion
+        verbose:        print the 5×5 comparison matrix + statistical-comparison signal summary after completion
         save_artifacts: persist artifacts to outputs/{timestamp}_{run_id}/ (default True)
         auto_warmup:    if True, run Welch analysis and override warm_up_days;
                         if False, use sim_params.warm_up_days as-is (no Welch run)
@@ -220,7 +370,7 @@ def e2_run_simulation(
             f"     VRF PASSED · VLD PASSED"
         )
         comp = build_comparison_table(results, include_paired_stats=True)
-        print(format_table9(comp))
+        print(format_comparison_matrix(comp))
         n_meaningful = int(comp["operationally_meaningful"].sum())
         print(
             f"\n  Signal: {n_meaningful}/25 scenarios operationally meaningful"
@@ -480,3 +630,42 @@ def e5_aggregate_losses(
             print(f"  Artifacts saved → {saved_dir}")
 
     return result
+
+
+# =============================================================================
+# E6 · e6_build_viz_payload
+# =============================================================================
+
+# Saffir-Simpson category color scheme — matches the frontend's _CAT_COLOR.
+_CAT_COLOR_RGBA: dict[int, list[int]] = {
+    1: [79, 179, 255, 200],
+    2: [0, 196, 140, 200],
+    3: [255, 184, 0, 200],
+    4: [255, 122, 0, 200],
+    5: [255, 59, 48, 200],
+}
+
+
+def e6_build_viz_payload(track_data: TyphoonTrackData) -> VizPayload:
+    """Flatten TyphoonTrackData into map-ready track + port marker data (E6).
+
+    Scope: track display only. The risk heatmap and 5x5 scenario grid that
+    were originally planned for this step were descoped from the frontend
+    (see design_frontend.md) — VizPayload only carries what the UI renders.
+    """
+    tracks = [
+        TyphoonTrackViz(
+            storm_id=event.storm_id,
+            name=event.name,
+            path=[[pt.lon, pt.lat] for pt in event.track_points],
+            color_rgba=_CAT_COLOR_RGBA[event.saffir_simpson_cat],
+            category=event.saffir_simpson_cat,
+        )
+        for event in track_data.events
+    ]
+    port_marker = PortMarker(
+        lon=track_data.port_lon,
+        lat=track_data.port_lat,
+        name=track_data.port_name,
+    )
+    return VizPayload(typhoon_tracks=tracks, port_marker=port_marker)

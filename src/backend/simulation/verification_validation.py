@@ -1,10 +1,9 @@
 """V&V module for port_typhoon_simulator.
 
 VRF (Verification — programmatic face-validity checks) on SimulationResults.
-VLD (Validation — sanity-check comparison against an independent benchmark reference),
-           following the validation approach in Cao & Lam (2018, Reliability
-           Engineering and System Safety) — compare simulated output against
-           real-world operational records, annualised for a like-for-like check.
+VLD (Validation — sanity-check comparison against an independent benchmark
+           reference) — compare simulated output against real-world
+           operational records, annualised for a like-for-like check.
 
 Benchmark reference (illustrative — calibrated for this public demo, since the
 original confidential operational dataset cannot be redistributed; the demo
@@ -26,20 +25,20 @@ from backend.schemas import SimulationResults
 # Benchmark reference constants (illustrative, see module docstring)
 # ---------------------------------------------------------------------------
 
-_T6_SHIP_ARRIVALS_7MO: int = 2270
-_T6_THROUGHPUT_TEU_7MO: float = 5_705_000.0
-_T6_OBSERVATION_MONTHS: int = 7
-_ANNUALISE: float = 12.0 / _T6_OBSERVATION_MONTHS
+_BENCHMARK_SHIP_ARRIVALS_7MO: int = 2270
+_BENCHMARK_THROUGHPUT_TEU_7MO: float = 5_705_000.0
+_BENCHMARK_OBSERVATION_MONTHS: int = 7
+_ANNUALISE: float = 12.0 / _BENCHMARK_OBSERVATION_MONTHS
 
-TABLE6_REF = {
-    "source":               "Illustrative benchmark reference (demo) — methodology per Cao & Lam (2018)",
+BENCHMARK_REF = {
+    "source":               "Illustrative benchmark reference (demo)",
     "port":                 "NPT (demo terminal)",
     "observation_period":   "2016-01-01 to 2016-07-31",
-    "observation_months":   _T6_OBSERVATION_MONTHS,
-    "ship_arrivals_7mo":    _T6_SHIP_ARRIVALS_7MO,
-    "throughput_teu_7mo":   _T6_THROUGHPUT_TEU_7MO,
-    "ship_arrivals_annual": round(_T6_SHIP_ARRIVALS_7MO * _ANNUALISE, 1),
-    "throughput_teu_annual": round(_T6_THROUGHPUT_TEU_7MO * _ANNUALISE, 0),
+    "observation_months":   _BENCHMARK_OBSERVATION_MONTHS,
+    "ship_arrivals_7mo":    _BENCHMARK_SHIP_ARRIVALS_7MO,
+    "throughput_teu_7mo":   _BENCHMARK_THROUGHPUT_TEU_7MO,
+    "ship_arrivals_annual": round(_BENCHMARK_SHIP_ARRIVALS_7MO * _ANNUALISE, 1),
+    "throughput_teu_annual": round(_BENCHMARK_THROUGHPUT_TEU_7MO * _ANNUALISE, 0),
 }
 
 
@@ -163,11 +162,11 @@ def vrf_summary(checks: list[dict]) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# VLD: sanity-check comparison against Table 6 actual records
+# VLD: sanity-check comparison against the benchmark reference
 # ---------------------------------------------------------------------------
 
 def run_vld_comparison(results: SimulationResults, tolerance_pct: float = 0.20) -> dict:
-    """Compare intact simulation output against Table 6 actual records (VLD —
+    """Compare intact simulation output against the benchmark reference (VLD —
     Validation: sanity check vs benchmark reference).
 
     Annualises the 7-month actual records (× 12/7) then computes:
@@ -181,8 +180,8 @@ def run_vld_comparison(results: SimulationResults, tolerance_pct: float = 0.20) 
 
     Returns a dict with per-KPI comparison rows and an overall verdict.
     """
-    ref_annual_ships = _T6_SHIP_ARRIVALS_7MO * _ANNUALISE
-    ref_annual_teu = _T6_THROUGHPUT_TEU_7MO * _ANNUALISE
+    ref_annual_ships = _BENCHMARK_SHIP_ARRIVALS_7MO * _ANNUALISE
+    ref_annual_teu = _BENCHMARK_THROUGHPUT_TEU_7MO * _ANNUALISE
 
     our_ships = results.intact.served_ship_calls_mean
     our_teu = results.intact.throughput_mean_teu
@@ -209,14 +208,14 @@ def run_vld_comparison(results: SimulationResults, tolerance_pct: float = 0.20) 
     kpis = [
         _kpi_row(
             "ship_arrivals",
-            _T6_SHIP_ARRIVALS_7MO,
+            _BENCHMARK_SHIP_ARRIVALS_7MO,
             ref_annual_ships,
             our_ships,
             "calls/yr",
         ),
         _kpi_row(
             "throughput_teu",
-            _T6_THROUGHPUT_TEU_7MO,
+            _BENCHMARK_THROUGHPUT_TEU_7MO,
             ref_annual_teu,
             our_teu,
             "TEU/yr",
@@ -225,14 +224,14 @@ def run_vld_comparison(results: SimulationResults, tolerance_pct: float = 0.20) 
 
     n_pass = sum(1 for k in kpis if k["within_tolerance"])
     return {
-        "reference":      TABLE6_REF,
+        "reference":      BENCHMARK_REF,
         "kpis":           kpis,
         "n_replications": results.n_replications_used,
         "tolerance_pct":  round(tolerance_pct * 100, 1),
         "all_passed":     n_pass == len(kpis),
         "note": (
             "VLD type: non-paired sanity check — reason: only single-period aggregate data available. "
-            f"Pass = within ±{tolerance_pct*100:.0f}% of annualised Table 6 reference (×12/7). "
-            "Annualised from 7-month actual records (RESS 2018 Table 6)."
+            f"Pass = within ±{tolerance_pct*100:.0f}% of the annualised benchmark reference (×12/7). "
+            "Annualised from a 7-month observation window."
         ),
     }

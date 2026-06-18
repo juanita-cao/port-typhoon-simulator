@@ -11,11 +11,11 @@ Protocol:
   - Candidates for bounded variables (lpc): beta, uniform (beta(1,1)), triangular
   - All fitted from user data — no paper-only constants remain.
 
-P1.3v compliance: candidates_json column contains ≥3 candidates with SSE per variable,
+Auditability: candidates_json column contains ≥3 candidates with SSE per variable,
 proving fit-all was executed (not hand-selected).
 
 Usage:
-    conda run -n somr python scripts/fit_input_distributions.py
+    python scripts/fit_input_distributions.py
 """
 
 from __future__ import annotations
@@ -69,7 +69,7 @@ def _fit_all_skewed(
 
     Returns (best_name, best_params, best_sse, best_ks_p, all_candidates).
     all_candidates has one entry per distribution tried — persisted in output
-    to prove fit-all was executed (P1.3v).
+    to prove fit-all was executed.
     """
     x, ecdf = _empirical_cdf(data)
     candidates: list[tuple[str, dict, float, float]] = []
@@ -430,7 +430,7 @@ def main() -> None:
     RECORD_OUT.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(rows).to_csv(RECORD_OUT, index=False)
     print(f"\nSaved {len(rows)} records → {RECORD_OUT}")
-    print("P1.3v: candidates_json column included — fit-all provable from CSV.")
+    print("candidates_json column included — fit-all provable from CSV.")
 
 
 if __name__ == "__main__":

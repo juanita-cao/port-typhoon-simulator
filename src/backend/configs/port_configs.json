@@ -1,5 +1,5 @@
 {
-  "_source": "Methodology adapted from Cao & Lam, Reliability Engineering and System Safety (2018) — port configuration below is illustrative (demo values), not a real terminal's operational specs",
+  "_source": "Port configuration below is illustrative (demo values), not a real terminal's operational specs",
   "ports": {
     "NPT": {
       "port_name": "NPT",

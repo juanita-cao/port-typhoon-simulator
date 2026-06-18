@@ -2,10 +2,10 @@
 
 Source: data/raw/raw_data.xlsx — sheet "2016", header at row 3 (0-indexed).
 Provides all timing columns needed to fit idle_before, idle_after, crane_eff
-without relying on paper constants.
+directly from the data, rather than relying on fixed constants.
 
 Usage:
-    conda run -n somr python scripts/build_processed_data.py
+    python scripts/build_processed_data.py
 """
 
 from __future__ import annotations

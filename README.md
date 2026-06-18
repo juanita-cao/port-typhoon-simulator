@@ -2,7 +2,7 @@
 
 A simulation-driven decision-support tool that estimates typhoon-induced container-port losses: given a port configuration and a typhoon's category and strike distance, it runs a discrete-event simulation of port operations under disruption, then turns the resulting throughput loss into physical and economic loss estimates with a statistical audit trail behind every number.
 
-Methodology follows Cao & Lam (2018), *Reliability Engineering and System Safety*. **The data is synthetic** — see [Data note](#data-note) below.
+Methodology: discrete-event simulation validated with Welch's warm-up method, Kelton's replication-count formula, common random numbers, and Holm-Bonferroni-corrected paired comparisons. **The data is synthetic** — see [Data note](#data-note) below.
 
 ---
 
@@ -39,8 +39,8 @@ Frontend design (state machine, view models, screen flow): [`docs/design_fronten
 ```bash
 pip install -r requirements.txt
 
-# run the test suite (76 tests: distributions, CRN stream independence,
-# replication-count formula, schema validation)
+# run the test suite (79 tests: distributions, CRN stream independence,
+# replication-count formula, schema validation, IBTrACS classification)
 pytest tests/ -v
 
 # lint
@@ -78,13 +78,15 @@ scripts/          one-off data generation / fitting / preprocessing scripts
 src/backend/      pipeline steps, schemas, SimPy simulation, statistics, artifact persistence
 src/frontend/     Streamlit state machine and view models
 src/app_streamlit.py   the UI entry point
-tests/            76 tests covering distributions, replication, output analysis
+tests/            79 tests covering distributions, replication, output analysis, IBTrACS classification
 ```
 
 ---
 
 ## Status
 
-Implemented and tested: the simulation step, physical/economic loss estimation, loss aggregation, the full statistical verification/validation layer, and the Streamlit frontend's single-scenario flow.
+Implemented and tested: IBTrACS parsing and scenario classification, the simulation step, physical/economic loss estimation, loss aggregation, the full statistical verification/validation layer, the track/port-marker viz transform, and the Streamlit frontend's single-scenario flow. Per-step status: `docs/design_backend.md` §9, `docs/design_frontend.md` §12, `docs/design_simulation.md` §8.
 
-Designed but not built: parsing typhoon tracks into the scenario matrix live (currently a static config file stands in for it) and the PyDeck risk-heatmap visualization that would consume it. Both are documented in `docs/design_backend.md` along with everything else still open.
+Hazard type is typhoon only. The sidebar's "Earthquake", "Tsunami", etc. entries are shown greyed out (not clickable) to indicate the data model was designed to extend to other hazard types — none of them are implemented or planned for this demo.
+
+Not built: a live runtime-integrity-check + audit-trail layer that would run alongside the main pipeline (separate from the simulation's own internal verification/validation, which is done) — see `docs/design_backend.md` §4 and §9.

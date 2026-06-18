@@ -1,7 +1,7 @@
 # Port Typhoon Risk Simulator — Backend Design
 
 **Service:** `port_typhoon_simulator`
-**Methodology source:** Cao & Lam (2018), *Reliability Engineering and System Safety* — simulation-based catastrophe-induced port loss estimation.
+**Methodology:** simulation-based catastrophe-induced port loss estimation — discrete-event simulation of port operations under disruption, validated with standard simulation-output-analysis techniques (see `design_simulation.md`).
 **Note on data:** this public version uses a synthetic vessel-call log and an illustrative demo port ("NPT") in place of the original confidential terminal dataset. The pipeline, schemas, and validation logic are unchanged — see `docs/design_simulation.md` §3 for how the synthetic data is generated and fitted.
 
 ---
@@ -202,16 +202,34 @@ For a full 26-scenario run (`run_full_pipeline()`), E2 is the bottleneck: `n_rep
 
 ## 8. Frontend chart inventory
 
-Tracks which figures/tables from the original paper's methodology the frontend reproduces, and where each one's data comes from. Separate from `VizPayload` (§5), which only covers the map layers.
+Tracks which figures/tables the frontend reproduces, and where each one's data comes from. Separate from `VizPayload` (§5), which only covers the map layers.
 
 | Item | Description | Data source | Status |
 |------|-------------|-------------|--------|
-| Disruption/damage table | Disrupted/recovery period, frequency, damage probability % per scenario | `configs/scenario_params.json` (static input — stands in for E1's classifier output until E1 is built) | ✅ available |
-| Comparison table | Decreased TEU / decreased % per category × distance bin | `e2_table9.txt`, `e2_comparison_table.csv` (E2 output) | ✅ done |
+| Disruption/damage table | Disrupted/recovery period, frequency, damage probability % per scenario | `configs/scenario_params.json` (static input — the live pipeline still reads this directly rather than calling E1 at request time, see §9) | ✅ available |
+| Comparison table | Decreased TEU / decreased % per category × distance bin | `e2_comparison_matrix.txt`, `e2_comparison_table.csv` (E2 output) | ✅ done |
 | Benchmark validation | Simulated vs. benchmark-reference comparison (ships, throughput) | `e2_vld_comparison.json` (E2's VLD check) | ✅ done |
 | 3D vulnerability surface | Decreased TEU across category × distance, as a surface | Same data as the comparison table — frontend would pivot it into a 5×5 grid itself | data ready, no dedicated viz endpoint |
 | Stacked loss bar chart | Physical + economic loss per distance bin, stacked by category | `e5_output.json` → `LossProfile.scenario_losses[]` | data ready, no dedicated viz endpoint |
 | Year-by-year historical+predicted loss | Per-year actual + predicted total loss | **Out of scope.** E5 only produces aggregate totals over the study period, not a per-year series; a real yearly breakdown needs E1's per-year event counts plus an undefined year-splitting rule for the predicted side | won't implement |
+
+---
+
+## 9. Implementation status
+
+| Task | Step | File | Status |
+|------|------|------|--------|
+| T1 | E1 · `e1_load_typhoon_data` | `backend/e_nodes.py` | ✅ done — IBTrACS parsing, Haversine distance, scenario classification, Pydantic-validated output |
+| T2 | E2 · `e2_run_simulation` | `backend/e_nodes.py` | ✅ done — SimPy DES, replication, VRF/VLD checks |
+| T3 | E3 · `e3_estimate_physical_loss` | `backend/e_nodes.py` | ✅ done — Monte Carlo, per-equipment breakdown |
+| T4 | E4 · `e4_estimate_economic_loss` | `backend/e_nodes.py` | ✅ done — deterministic throughput-loss formula |
+| T5 | E5 · `e5_aggregate_losses` | `backend/e_nodes.py` | ✅ done — historical + 5-year projected totals |
+| T6 | E6 · `e6_build_viz_payload` | `backend/e_nodes.py` | ✅ done — scope reduced to track + port marker (risk heatmap / 5×5 grid descoped, see `design_frontend.md`) |
+| T7 | `run_full_pipeline()` / `run_single_scenario_pipeline()` | `backend/pipeline.py` | ✅ done |
+| T8 | Verification & audit layer (runtime integrity check, audit trail — see §4) | — | ⬜ not built; separate from E2's own internal checks, which are done |
+| T9 | Tests | `tests/` | ✅ 79 tests total (3 cover E1/E6 directly) |
+
+**E1/E6 are implemented but not yet called from the live request path:** `run_single_scenario_pipeline()` still reads `scenario_params.json` directly and the frontend still reads pre-built `data/typhoon_tracks/*.json` files, both for speed — IBTrACS classification and track data don't change between requests, so there's no need to recompute them per request. `scripts/e1_parse_ibtracs.py` calls `e1_load_typhoon_data()` to (re)build those cached files whenever the underlying data changes.
 
 ---
 
@@ -224,3 +242,4 @@ Tracks which figures/tables from the original paper's methodology the frontend r
 | 2026-06-17 | Frontend results view-model wired to the real pipeline. |
 | 2026-06-17 | Risk heatmap marked out of scope for the frontend (E6 not built). |
 | 2026-06-18 | Public version: real terminal data replaced with a synthetic vessel-call log; port identity genericized; internal protocol references removed from this document. |
+| 2026-06-18 | E1 and E6 implemented in `e_nodes.py` (previously designed but not built); E6's scope reduced to track + port marker; `scripts/e1_parse_ibtracs.py` refactored to call E1 instead of duplicating its parsing logic; download buttons fixed to export only the on-screen scenario, not a 25-scenario lookup table. |

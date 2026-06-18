@@ -8,11 +8,11 @@ build_simulation_results():
 build_comparison_table():
   - Post-processes SimulationResults into a flat comparison DataFrame
   - One row per disrupted scenario (25 rows)
-  - Table 9-compatible: decreased_teu, decreased_pct, plus optional statistical-comparison stats
-  - Used by E2 verbose output and downstream E4/V2 audit builders
+  - Columns: decreased_teu, decreased_pct, plus optional statistical-comparison stats
+  - Used by E2 verbose output and downstream E4/audit builders
 
-format_table9():
-  - Renders the comparison DataFrame as a 5×5 console matrix matching paper Table 9
+format_comparison_matrix():
+  - Renders the comparison DataFrame as a 5×5 category x distance-bin console matrix
 """
 
 from __future__ import annotations
@@ -89,7 +89,7 @@ def build_comparison_table(
     *,
     include_paired_stats: bool = True,
 ) -> pd.DataFrame:
-    """Build scenario comparison table in Table 9 format (plus optional statistical-comparison stats).
+    """Build the scenario comparison table (plus optional statistical-comparison stats).
 
     Args:
         results:              validated SimulationResults from E2
@@ -160,8 +160,8 @@ def build_comparison_table(
     return pd.DataFrame(rows)
 
 
-def format_table9(df: pd.DataFrame) -> str:
-    """Render comparison DataFrame as Table 9-style 5×5 console matrix.
+def format_comparison_matrix(df: pd.DataFrame) -> str:
+    """Render comparison DataFrame as a 5×5 category x distance-bin console matrix.
 
     Columns: distance bins (km) — 0–100, 101–200, 201–300, 301–400, 401–500
     Rows (per typhoon category): Decreased TEU | Decreased/Intact %

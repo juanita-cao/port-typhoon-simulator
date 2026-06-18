@@ -1,5 +1,5 @@
 {
-  "_source": "RESS 2018 Table 8 — Disrupted and recovery period (days) and damage probability per scenario",
+  "_source": "Disruption/recovery period (days) and damage probability per scenario",
   "_note": "scenario_id = (typhoon_cat - 1) * 5 + dist_bin; dist_bin 1=0-100km ... 5=401-500km",
   "scenarios": [
     {"scenario_id":  1, "typhoon_cat": 1, "dist_bin": 1, "dist_min_km":   0, "dist_max_km": 100, "disruption_days_min":  0, "disruption_days_max":  30, "damage_prob_min": 0.096, "damage_prob_max": 0.120},

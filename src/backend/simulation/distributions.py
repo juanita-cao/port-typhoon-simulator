@@ -31,7 +31,7 @@ def _load_fitted_params() -> dict:
     if not _RECORD_PATH.exists():
         raise FileNotFoundError(
             f"input_dist_record.csv not found at {_RECORD_PATH}.\n"
-            "Run:  conda run -n somr python scripts/fit_input_distributions.py"
+            "Run:  python scripts/fit_input_distributions.py"
         )
 
     rec = pd.read_csv(_RECORD_PATH)
@@ -99,7 +99,7 @@ _GROUP_BETA: list[tuple[float, float]] = _FITTED["group_beta"]
 
 _CRANES_BY_GROUP: list[int] = _FITTED["cranes_by_group"]
 
-# TEU conversion factor (RESS 2018 validation: 2246.6 TEU/ship ÷ 1284.2 LPC/ship)
+# TEU conversion factor — typical 40ft (2 TEU) / 20ft (1 TEU) container mix
 TEU_FACTOR: float = 1.75
 
 # Distribution metadata for idle times and crane efficiency (used by tests)
