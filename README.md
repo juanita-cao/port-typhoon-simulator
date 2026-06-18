@@ -18,6 +18,19 @@ Methodology: discrete-event simulation validated with Welch's warm-up method, Ke
 
 ---
 
+## Engineering Approach
+
+This project uses a contract-first simulation workflow:
+
+1. Define input/output schemas before implementing pipeline logic.
+2. Separate simulation execution, validation checks, and decision interpretation.
+3. Preserve raw replication outputs for reproducibility and statistical review.
+4. Use explicit verification and validation gates before presenting results as decision support.
+5. Persist run metadata, comparison tables, and artifacts for auditability.
+6. Keep the UI layer separate from the simulation pipeline through a ViewModel-style interface.
+
+---
+
 ## Architecture
 
 ```
