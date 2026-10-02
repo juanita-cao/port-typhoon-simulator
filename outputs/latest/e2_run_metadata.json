@@ -1,0 +1,8 @@
+{
+  "run_id": "63e273f3-6089-4d30-8128-7bd96db5fd43",
+  "timestamp": "2026-06-16T03:39:06.900988+00:00",
+  "protocol_version": "DES-v2",
+  "design_doc_hash": "1f8096b1",
+  "n_replications": 270,
+  "random_seed_base": 42
+}

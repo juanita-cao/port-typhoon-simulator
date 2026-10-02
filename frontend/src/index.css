@@ -1,0 +1,28 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #0f172a;
+  color: #f1f5f9;
+  min-height: 100vh;
+}
+
+@keyframes spin-ccw {
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes pulse-red {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes drift-left {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-800px); }
+}
+
+@keyframes wave {
+  0%, 100% { d: path("M0,8 Q20,0 40,8 Q60,16 80,8"); }
+  50%       { d: path("M0,0 Q20,8 40,0 Q60,-8 80,0"); }
+}
